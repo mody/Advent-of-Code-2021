@@ -13,5 +13,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # find_package(Boost 1.67.0 COMPONENTS unit_test_framework REQUIRED)
 # include_directories(src ${Boost_INCLUDE_DIR} ${TBB_DIR})
 
-# add_executable(level1 src/level1.cc)
-# target_compile_features(level1 PRIVATE cxx_std_17)
+add_executable(day1 src/day1.cc)
+target_compile_features(day1 PRIVATE cxx_std_17)
