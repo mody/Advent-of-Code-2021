@@ -25,27 +25,30 @@ int main()
     std::cout << "1: " << result << "\n";
 
     result = 0;
-    std::deque<unsigned> windowA, windowB;
+    last = 0;
+    std::deque<unsigned> window;
 
-    auto itA = measurement.begin();
-    auto itB = std::next(itA);
-
-    for (; itB != measurement.end(); ++itA, ++itB) {
-        windowA.push_back(*itA);
-        windowB.push_back(*itB);
-
-        if (windowA.size() > 3) {
-            windowA.pop_front();
-        }
-        if (windowB.size() > 3) {
-            windowB.pop_front();
+    for (auto const& i : measurement) {
+        window.push_back(i);
+        if (window.size() < 3) {
+            continue;
         }
 
-        if (windowA.size() == 3 && windowB.size() == 3) {
-            if ((windowA.at(0) + windowA.at(1) + windowA.at(2)) < (windowB.at(0) + windowB.at(1) + windowB.at(2))) {
-                ++result;
-            }
+        if (last == 0) {
+            last = window.at(0) + window.at(1) + window.at(2);
+            continue;
         }
+
+        if (window.size() > 3) {
+            window.pop_front();
+        }
+
+        const auto current = window.at(0) + window.at(1) + window.at(2);
+        if (last < current) {
+            ++result;
+        }
+
+        last = current;
     }
 
     std::cout << "2: " << result << "\n ";
