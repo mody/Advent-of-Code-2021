@@ -1,7 +1,7 @@
-#include <algorithm>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -31,6 +31,8 @@ struct Board
             if (data.at(line + 0).seen && data.at(line + 1).seen && data.at(line + 2).seen && data.at(line + 3).seen
                 && data.at(line + 4).seen)
             {
+                winning_number = number;
+                finished = true;
                 return true;
             }
         }
@@ -39,6 +41,8 @@ struct Board
                 && data.at(col + BOARD_SIZE * 2).seen && data.at(col + BOARD_SIZE * 3).seen
                 && data.at(col + BOARD_SIZE * 4).seen)
             {
+                winning_number = number;
+                finished = true;
                 return true;
             }
         }
@@ -46,32 +50,55 @@ struct Board
     }
 
     unsigned score() const {
+        assert(finished);
+
         unsigned unmarked = 0;
         for (auto const& it : data) {
             if (!it.seen) {
                 unmarked += it.n;
             }
         }
-        return unmarked;
+        return unmarked * winning_number;
+    }
+
+    bool done() const
+    {
+        return finished;
     }
 
 protected:
     std::vector<Number> data;
+    unsigned winning_number = std::numeric_limits<unsigned>::max();
+    bool finished = false;
 };
 
 using Boards = std::vector<Board>;
 
 
-void part1(std::vector<unsigned> const& randoms, Boards boards)
+std::pair<unsigned, unsigned> first_last(std::vector<unsigned> const& randoms, Boards boards)
 {
+    std::vector<unsigned> winners;
+
     for (auto const& num : randoms) {
-        for (auto& board : boards) {
-            if (board.draw(num)) {
-                std::cout << "1: " << board.score() * num << "\n";
-                return;
-            }
+        if (boards.empty()) {
+            break;
         }
+        for (auto& board : boards) {
+            board.draw(num);
+        }
+        auto it = std::stable_partition(boards.begin(), boards.end(), [](Board const& board) { return !board.done(); });
+        if (it == boards.end()) {
+            continue;
+        }
+        if (it == boards.begin()) {
+            break;
+        }
+        for (auto x = it; x != boards.end(); ++x) {
+            winners.push_back(x->score());
+        }
+        boards.erase(it, boards.end());
     }
+    return {winners.front(), winners.back()};
 }
 
 int main()
@@ -109,8 +136,8 @@ int main()
         boards.push_back(std::move(b));
     }
 
-    part1(randoms, boards);
-
+    auto const& [first, last] = first_last(randoms, boards);
+    std::cout << "1: " << first << "\n2: " << last << "\n";
 
     return 0;
 }
