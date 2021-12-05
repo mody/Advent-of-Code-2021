@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <boost/container_hash/hash.hpp>
 #include <cassert>
 #include <iostream>
@@ -50,7 +49,7 @@ std::ostream& operator<<(std::ostream& os, Point const& p)
 
 }  // namespace std
 
-using Mapa = std::unordered_map<Point, unsigned>;
+using Mapa = std::unordered_map<Point, std::pair<unsigned, unsigned>>;
 
 
 int main()
@@ -70,28 +69,45 @@ int main()
         Point p2(std::stoul(m.str(3)), std::stoul(m.str(4)));
         Point d(0, 0);
         if (p1.x == p2.x) {
-            d = Point(0, (p1.y < p2.y) ? 1 : -1);
+            d.y = (p1.y < p2.y) ? 1 : -1;
         } else if (p1.y == p2.y) {
-            d = Point((p1.x < p2.x) ? 1 : -1, 0);
+            d.x = (p1.x < p2.x) ? 1 : -1;
         } else {
-            // skip diagonal
-            continue;
+            d.x = (p1.x < p2.x) ? 1 : -1;
+            d.y = (p1.y < p2.y) ? 1 : -1;
         }
-        for(; !(p1 == p2); p1 += d) {
-            mapa.insert({p1, 0}).first->second += 1;
+
+        auto update_map = [&](Point const& px) {
+            auto& data = mapa.insert({px, {0, 0}}).first->second;
+            if (d.x == 0 || d.y == 0) {
+                data.first += 1;
+            } else {
+                data.second += 1;
+            }
+        };
+
+        for (; !(p1 == p2); p1 += d)
+        {
+            update_map(p1);
         }
-        mapa.insert({p1, 0}).first->second += 1;
+        update_map(p1);
     }
 
     unsigned result1 = 0;
-
     for (auto const& [px, cnt] : mapa) {
-        if (cnt > 1) {
+        if (cnt.first > 1) {
             ++result1;
         }
     }
-
     std::cout << "1: " << result1 << "\n";
+
+    unsigned result2 = 0;
+    for (auto const& [px, cnt] : mapa) {
+        if (cnt.first + cnt.second > 1) {
+            ++result2;
+        }
+    }
+    std::cout << "2: " << result2 << "\n";
 
     return 0;
 }
