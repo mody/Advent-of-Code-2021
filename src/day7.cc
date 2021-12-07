@@ -4,6 +4,7 @@
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <string>
 
 using Pool = std::deque<long>;
@@ -19,6 +20,20 @@ void part1(Pool pool) {
     }
 
     std::cout << "1: median: " << median << ", fuel: " << fuel << "\n";
+}
+
+void part2(Pool pool) {
+    long sum = std::accumulate(pool.begin(), pool.end(), 0, [](long const& a, long const& b) { return a + b; });
+
+    long mean = sum / pool.size();
+    long fuel = 0;
+    for (auto const& i : pool) {
+        for (long x = 1; x <= std::abs(mean - i); ++x) {
+            fuel += x;
+        }
+    }
+
+    std::cout << "2: median: " << mean << ", fuel: " << fuel << "\n";
 }
 
 int main()
@@ -38,6 +53,7 @@ int main()
     }();
 
     part1(pool);
+    part2(pool);
 
     return 0;
 }
