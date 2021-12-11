@@ -56,6 +56,10 @@ struct Mapa {
         }
     }
 
+    size_t size() const {
+        return data.size();
+    }
+
 protected:
     bool has(size_t x, size_t y) const
     {
@@ -96,15 +100,21 @@ int main()
         }
         mapa.append(line);
     }
-    // mapa.dump();
 
     size_t result1 = 0;
-    for (size_t i = 0; i < 100; ++i) {
-        result1 += mapa.step();
-        // std::cout << "\nAfter step " << i << ":\n";
-        // mapa.dump();
+    size_t result2 = 0;
+    for (size_t i = 0; i < 1000; ++i) {
+        const size_t num = mapa.step();
+        if (i < 100) {
+            result1 += num;
+        }
+        if (result2 == 0 && num == mapa.size()) {
+            result2 = i + 1;
+            break;
+        }
     }
     std::cout << "1: " << result1 << "\n";
+    std::cout << "2: " << result2 << "\n";
 
     return 0;
 }
