@@ -1,6 +1,8 @@
 #include <cassert>
+#include <deque>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -16,7 +18,8 @@ struct Node
     }
 
     std::string name;
-    bool visited = false;
+    int visited = 0;
+    int max_visits = 1;
     bool capital = false;
     std::vector<std::string> children;
 };
@@ -24,37 +27,56 @@ struct Node
 struct Tree
 {
     void part1() {
-        paths = 0;
+        paths.clear();
         dive("start");
-        std::cout << "1: " << paths << "\n";
+        std::cout << "1: " << paths.size() << "\n";
+    }
+
+    void part2() {
+        paths.clear();
+
+        for (auto& n : nodes) {
+            if (n.second.capital || n.first == "start" || n.first == "end") {
+                continue;
+            }
+            n.second.max_visits = 2;
+            dive("start");
+            n.second.max_visits = 1;
+        }
+        std::cout << "2: " << paths.size() << "\n";
     }
 
     void dive(std::string const& parent) {
-        // std::cout << "dive to " << parent << "\n";
         if (parent == "end") {
-            ++paths;
-            // std::cout << "HIT end, " << paths << "times\n\n";
+            std::string path_string;
+            for (auto const& p : path) {
+                path_string.append(p).append(",");
+            }
+            path_string.append("end");
+            paths.insert(std::move(path_string));
             return;
         }
 
         Node& top = nodes.at(parent);
-        if (top.visited && !top.capital) {
+        if (!top.capital && top.visited == top.max_visits) {
             // can't use lower-case again
-            // std::cout << "- can't use lower-case again\n";
             return;
         }
-        top.visited = true;
+        path.push_back(parent);
+        ++top.visited;
         for (auto const& child : top.children) {
             dive(child);
         }
 
         // back-tracking, un-visit
-        // std::cout << "- back-tracking, un-visit " << parent << "\n";
-        top.visited = false;
+        --top.visited;
+        path.pop_back();
     }
 
     std::map<std::string, Node> nodes;
-    int paths = 0;
+    int paths_count = 0;
+    std::deque<std::string> path;
+    std::set<std::string> paths;
 };
 
 int main()
@@ -78,6 +100,7 @@ int main()
     }
 
     tree.part1();
+    tree.part2();
 
     return 0;
 }
