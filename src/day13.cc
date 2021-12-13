@@ -75,7 +75,7 @@ void dump(Mapa const& mapa)
         for (int64_t x = 0; x < max_x; ++x) {
             auto it = mapa.find({x, y});
             if (it == mapa.end()) {
-                std::cout << '.';
+                std::cout << ' ';
             } else {
                 std::cout << '#';
             }
@@ -134,7 +134,6 @@ int main()
 
     unsigned folds = 0;
     while(std::getline(std::cin, line)) {
-        // std::cout << line << "\n";
         if (line.empty()) break;
         std::smatch m;
         if (!std::regex_match(line, m, RX)) {
@@ -152,9 +151,11 @@ int main()
         if (folds == 0) {
             std::cout << "1: " << mapa.size() << "\n";
         }
-        // dump(mapa);
         ++folds;
     }
+
+    std::cout << "2:\n";
+    dump(mapa);
 
     return 0;
 }
