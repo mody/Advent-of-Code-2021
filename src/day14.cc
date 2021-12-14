@@ -1,13 +1,56 @@
 #include <cassert>
 #include <iostream>
-#include <map>
 #include <regex>
 #include <string>
-#include <utility>
+#include <unordered_map>
 
 static std::regex RX {"^([A-Z]+) -> ([A-Z])$"};
 
-using Rules = std::map<std::string, std::string>;
+using Rules = std::unordered_map<std::string, std::string>;
+
+uint64_t compute(std::string polymer, Rules const& rules, int iterations) {
+    std::unordered_map<std::string, uint64_t> counts;
+
+    char last = 0;
+    for (auto c : polymer) {
+        if (last != 0) {
+            counts.insert({std::string {last} + c, 0}).first->second++;
+        }
+        last = c;
+    }
+
+    for (int i = 0; i < iterations; ++i) {
+        std::unordered_map<std::string, uint64_t> c2;
+        for (auto const& [k, v] : counts) {
+            auto it = rules.find(k);
+            if (it == rules.end()) {
+                c2.insert({k, 0}).first->second += v;
+                continue;
+            }
+            std::string k1 {k.at(0) + it->second};
+            std::string k2 {it->second + k.at(1)};
+            c2.insert({k1, 0}).first->second += v;
+            c2.insert({k2, 0}).first->second += v;
+        }
+        std::swap(counts, c2);
+    }
+
+
+    std::unordered_map<char, size_t> c3;
+    for (auto const& [k, v] : counts) {
+        c3.insert({k.at(0), 0}).first->second += v;
+    }
+    c3.insert({polymer.back(), 0}).first->second++;
+    std::vector<std::pair<char, uint64_t>> data;
+    for (auto const& [k, v] : c3) {
+        data.push_back({k, v});
+    }
+    std::sort(data.begin(), data.end(), [](std::pair<char, size_t> const& a, std::pair<char, size_t> const& b) {
+        return a.second < b.second;
+    });
+    return (data.back().second - data.front().second);
+}
+
 
 int main()
 {
@@ -36,36 +79,8 @@ int main()
         rules[m.str(1)] = m.str(2);
     }
 
-    for (int i = 0; i < 10; ++i) {
-        std::string p2;
-        p2.reserve(polymer.size() * 2);
-        char last = 0;
-        for (auto c : polymer) {
-            if (last == 0) {
-                last = c;
-                continue;
-            }
-            auto it = rules.find(std::string {last} + c);
-            assert(it != rules.end());
-            p2 += last + it->second;
-            last = c;
-        }
-        p2 += last;
-        std::swap(p2, polymer);
-    }
-
-    std::map<char, size_t> counts;
-    for (auto c : polymer) {
-        counts.insert({c, 0}).first->second++;
-    }
-    std::vector<std::pair<char, size_t>> data;
-    for (auto p : counts) {
-        data.push_back(std::move(p));
-    }
-    std::sort(data.begin(), data.end(), [](std::pair<char, size_t> const& a, std::pair<char, size_t> const& b) {
-        return a.second < b.second;
-    });
-    std::cout << (data.back().second - data.front().second) << "\n";
+    std::cout << "1: " << compute(polymer, rules, 10) << "\n";
+    std::cout << "2: " << compute(polymer, rules, 40) << "\n";
 
     return 0;
 }
