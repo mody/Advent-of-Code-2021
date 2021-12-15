@@ -19,17 +19,25 @@ struct Mapa
 {
     using CoordType = int;
 
-    void append(std::string line)
+    void append(std::string const& line)
     {
         max_x = line.size();
         max_y += 1;
-        data.append(std::move(line));
+        for (auto c : line) {
+            data.push_back(to_int(c));
+        }
     }
 
     void dump() const
     {
+        std::string line;
+        line.reserve(max_x);
         for (CoordType y = 0; y < max_y; ++y) {
-            std::cout << data.substr(y * max_x, max_x) << "\n";
+            for (CoordType x = 0; x < max_x; ++x) {
+                line += to_char(get(x, y));
+            }
+            std::cout << line << "\n";
+            line.clear();
         }
     }
 
@@ -38,9 +46,92 @@ struct Mapa
         return data.size();
     }
 
-    std::string const& get_data() const
+    int part1()
     {
-        return data;
+        return calculate_distance();
+    }
+
+    int part2()
+    {
+        multiply();
+        return calculate_distance();
+    }
+
+protected:
+    void multiply()
+    {
+        std::vector<int> d2, line;
+        for (CoordType y = 0; y < max_y; ++y) {
+            for (CoordType x = 0; x < max_x; ++x) {
+                int c = get(x, y);
+                line.push_back(c);
+                d2.push_back(c);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                for (int& c : line) {
+                    if (++c > 9) {
+                        c = 1;
+                    }
+                    d2.push_back(c);
+                }
+            }
+
+            line.clear();
+        }
+
+        std::swap(data, d2);
+        max_x = max_x * 5;
+
+        CoordType y = 0;
+        for (int i = 0; i < 4 * max_y; ++i) {
+            for (CoordType x = 0; x < max_x; ++x) {
+                auto c = data.at(xy_to_index(x, y));
+                if (++c > 9) {
+                    c = 1;
+                }
+                data.push_back(c);
+            }
+            ++y;
+        }
+        max_y = max_y * 5;
+    }
+
+    int calculate_distance() const
+    {
+        using Graph = boost::adjacency_list<
+            boost::vecS, boost::vecS, boost::bidirectionalS, boost::property<boost::vertex_distance_t, int>,
+            boost::property<boost::edge_weight_t, int>>;
+
+        Graph g;
+
+        for (size_t idx = 0; idx < data.size(); ++idx) {
+            (void)add_vertex(g);
+        }
+
+        auto ew = boost::get(boost::edge_weight, g);
+
+        for (size_t idx = 0; idx < data.size(); ++idx) {
+            auto const& [x, y] = index_to_xy(idx);
+            auto from = boost::vertex(idx, g);
+
+            auto add_edge = [&](Mapa::CoordType x, Mapa::CoordType y) {
+                auto const& [e, _] = boost::add_edge(from, xy_to_index(x, y), g);
+                ew[e] = get(x, y);
+            };
+
+            if (has(x - 1, y)) { add_edge(x - 1, y); }
+            if (has(x + 1, y)) { add_edge(x + 1, y); }
+
+            if (has(x, y - 1)) { add_edge(x, y - 1); }
+            if (has(x, y + 1)) { add_edge(x, y + 1); }
+        }
+
+        boost::dijkstra_shortest_paths(
+            g, boost::vertex(0, g), boost::distance_map(boost::get(boost::vertex_distance, g)));
+
+        auto dist = boost::get(boost::vertex_distance, g);
+        return dist[boost::vertex(data.size() - 1, g)];
     }
 
     bool has(CoordType x, CoordType y) const
@@ -66,12 +157,24 @@ struct Mapa
         return {x, y};
     }
 
-protected:
+    int to_int(char c) const
+    {
+        assert(c >= '0');
+        assert(c <= '9');
+        return c - '0';
+    }
+
+    char to_char(int i) const
+    {
+        assert(i >= 0);
+        assert(i <= 9);
+        return i + '0';
+    }
+
     CoordType max_x = 0, max_y = 0;
-    std::string data;
+    std::vector<int> data;
 };
 
-template<typename T> class TD;
 
 int main()
 {
@@ -85,52 +188,11 @@ int main()
         mapa.append(line);
     }
 
-    // mapa.dump();
+    auto r1 = mapa.part1();
+    std::cout << "1: " << r1 << "\n";
 
-    using vertex_descriptor =
-        boost::adjacency_list_traits<boost::vecS, boost::vecS, boost::bidirectionalS>::vertex_descriptor;
-
-    using Graph = boost::adjacency_list<
-        boost::vecS, boost::vecS, boost::bidirectionalS,
-        boost::property<boost::vertex_distance_t, int, boost::property<boost::vertex_predecessor_t, vertex_descriptor>>,
-        boost::property<boost::edge_weight_t, int>>;
-
-    Graph g;
-
-    for (size_t idx = 0; idx < mapa.get_data().size(); ++idx) {
-        (void)add_vertex(g);
-    }
-
-    auto ew = boost::get(boost::edge_weight, g);
-
-    for (size_t idx = 0; idx < mapa.get_data().size(); ++idx) {
-        auto const& [x, y] = mapa.index_to_xy(idx);
-        auto from = boost::vertex(idx, g);
-
-        auto add_edge = [&](Mapa::CoordType x, Mapa::CoordType y) {
-            auto const& [e, _] = boost::add_edge(from, mapa.xy_to_index(x, y), g);
-            ew[e] = mapa.get(x, y) - '0';
-        };
-
-        if (mapa.has(x - 1, y)) { add_edge(x - 1, y); }
-        if (mapa.has(x + 1, y)) { add_edge(x + 1, y); }
-
-        if (mapa.has(x, y - 1)) { add_edge(x, y - 1); }
-        if (mapa.has(x, y + 1)) { add_edge(x, y + 1); }
-
-        // if (mapa.has(x - 1, y - 1)) { add_edge(x - 1, y - 1); }
-        // if (mapa.has(x + 1, y + 1)) { add_edge(x + 1, y + 1); }
-
-        // if (mapa.has(x + 1, y - 1)) { add_edge(x + 1, y - 1); }
-        // if (mapa.has(x - 1, y + 1)) { add_edge(x - 1, y + 1); }
-    }
-
-    boost::dijkstra_shortest_paths(
-        g, boost::vertex(0, g),
-        predecessor_map(boost::get(boost::vertex_predecessor, g)).distance_map(boost::get(boost::vertex_distance, g)));
-
-    auto dist = boost::get(boost::vertex_distance, g);
-    std::cout << "1: " << dist[boost::vertex(mapa.get_data().size()-1, g)] << "\n";
+    auto r2 = mapa.part2();
+    std::cout << "2: " << r2 << "\n";
 
     return 0;
 }
