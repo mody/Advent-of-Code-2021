@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,7 +36,6 @@ std::pair<int, int> parse_header(Data::iterator& it)
     id |= ((*it++ ? 1 : 0) << 1);
     id |= ((*it++ ? 1 : 0) << 0);
 
-    std::cout << "Parsed header: " << version << ", ID: " << id << "\n";
     return {version, id};
 };
 
@@ -52,7 +52,7 @@ struct Packet
     virtual ~Packet() = default;
     virtual Data::iterator parse(Data::iterator it) = 0;
 
-    // virtual int get_value() const = 0;
+    virtual int64_t get_value() const = 0;
     virtual int sum_versions() const = 0;
 
     int get_version() const
@@ -80,8 +80,6 @@ struct LiteralValue : public Packet
 
     Data::iterator parse(Data::iterator it) override
     {
-        auto bck = it;
-        // int bits = 6;
         for (bool last = false; !last;) {
             last = !*it++;
             int val = 0;
@@ -91,16 +89,7 @@ struct LiteralValue : public Packet
             val |= ((*it++ ? 1 : 0) << 0);
             value <<= 4;
             value |= val;
-            // bits += 5;
         }
-        std::cout << "Literal value: " << value << "\n";
-
-        std::cout << "parsed " << std::distance(bck, it) << " bits\n";
-
-        // skip padding
-        // if (bits % 8 != 0) {
-        //     std::advance(it, 8 - (bits % 8));
-        // }
         return it;
     }
 
@@ -109,37 +98,90 @@ struct LiteralValue : public Packet
         return version;
     }
 
+    int64_t get_value() const override
+    {
+        return value;
+    }
+
 protected:
     uint64_t value = 0;
 };
 
+struct Operator : public Packet
+{
+    Operator(int version, int id);
 
-struct OperatorRaw : public Packet
+    int sum_versions() const override;
+    int64_t get_value() const override;
+
+protected:
+    std::vector<PacketPtr> packets;
+};
+
+struct OperatorRaw : public Operator
 {
     OperatorRaw(int version, int id);
     Data::iterator parse(Data::iterator it) override;
-
-    int sum_versions() const override;
-
-protected:
-    std::vector<PacketPtr> packets;
 };
 
-
-struct OperatorRepeat : public Packet
+struct OperatorRepeat : public Operator
 {
     OperatorRepeat(int version, int id);
     Data::iterator parse(Data::iterator it) override;
-
-    int sum_versions() const override;
-
-protected:
-    std::vector<PacketPtr> packets;
 };
 
+Operator::Operator(int version, int id)
+    : Packet(version, id)
+{ }
+
+int64_t Operator::get_value() const
+{
+    int64_t result = 0;
+    if (id == 0) {
+        for (auto const& ptr : packets) {
+            result += ptr->get_value();
+        }
+    } else if (id == 1) {
+        result = 1;
+        for (auto const& ptr : packets) {
+            result *= ptr->get_value();
+        }
+    } else if (id == 2) {
+        result = std::numeric_limits<int>::max();
+        for (auto const& ptr : packets) {
+            result = std::min(result, ptr->get_value());
+        }
+    } else if (id == 3) {
+        result = std::numeric_limits<int>::min();
+        for (auto const& ptr : packets) {
+            result = std::max(result, ptr->get_value());
+        }
+    } else if (id == 5) {
+        assert(packets.size() == 2);
+        result = packets.at(0)->get_value() > packets.at(1)->get_value() ? 1 : 0;
+    } else if (id == 6) {
+        assert(packets.size() == 2);
+        result = packets.at(0)->get_value() < packets.at(1)->get_value() ? 1 : 0;
+    } else if (id == 7) {
+        assert(packets.size() == 2);
+        result = packets.at(0)->get_value() == packets.at(1)->get_value() ? 1 : 0;
+    } else {
+        assert(false);
+    }
+    return result;
+}
+
+int Operator::sum_versions() const
+{
+    int result = version;
+    for (auto const& ptr : packets) {
+        result += ptr->sum_versions();
+    }
+    return result;
+}
 
 OperatorRaw::OperatorRaw(int version, int id)
-    : Packet(version, id)
+    : Operator(version, id)
 { }
 
 Data::iterator OperatorRaw::parse(Data::iterator it)
@@ -149,59 +191,33 @@ Data::iterator OperatorRaw::parse(Data::iterator it)
         val <<= 1;
         val |= (*it++ ? 1 : 0);
     }
-    std::cout << "Raw data size: " << val << "\n";
 
     auto from = it;
 
     for (; std::distance(from, it) < val;) {
         PacketPtr ptr;
-        auto bck = it;
 
         auto const& [version, id] = parse_header(it);
-        // if (version == 0 && id == 0) {
-        //     break;
-        // }
 
         if (id == 4) {
-            std::cout << "[RAW] Found LiteralValue\n";
             ptr = std::make_shared<LiteralValue>(version, id);
         } else {
-            // operators
             if (!*it++) {
-                // raw bits, length in next 15bits
-                std::cout << "[RAW] Found OperatorRaw\n";
                 ptr = std::make_shared<OperatorRaw>(version, id);
             } else {
-                // next 11 bits are a number that represents the number of sub-packets immediately contained
-                std::cout << "[RAW] Found OperatorRepeat\n";
                 ptr = std::make_shared<OperatorRepeat>(version, id);
             }
         }
         it = ptr->parse(it);
         packets.push_back(std::move(ptr));
-        std::cout << "parsed " << std::distance(bck, it) << " bits\n";
     }
-
-    // skip padding
-    // bits += std::distance(from, it);
-    // if (bits % 8 != 0) {
-    //     std::advance(it, 8 - (bits % 8));
-    // }
 
     return it;
 }
 
-int OperatorRaw::sum_versions() const
-{
-    int result = version;
-    for (auto const& ptr : packets) {
-        result += ptr->sum_versions();
-    }
-    return result;
-}
 
 OperatorRepeat::OperatorRepeat(int version, int id)
-    : Packet(version, id)
+    : Operator(version, id)
 { }
 
 Data::iterator OperatorRepeat::parse(Data::iterator it)
@@ -211,48 +227,26 @@ Data::iterator OperatorRepeat::parse(Data::iterator it)
         val <<= 1;
         val |= (*it++ ? 1 : 0);
     }
-    std::cout << "Messages: " << val << "\n";
 
     for (unsigned i = 0; i < val; ++i) {
         PacketPtr ptr;
-        auto bck = it;
 
         auto const& [version, id] = parse_header(it);
-        // if (version == 0 && id == 0) {
-        //     break;
-        // }
 
         if (id == 4) {
-            std::cout << "[REP] Found LiteralValue\n";
             ptr = std::make_shared<LiteralValue>(version, id);
         } else {
-            // operators
             if (!*it++) {
-                // raw bits, length in next 15bits
-                std::cout << "[REP] Found OperatorRaw\n";
                 ptr = std::make_shared<OperatorRaw>(version, id);
             } else {
-                // next 11 bits are a number that represents the number of sub-packets immediately contained
-                std::cout << "[REP] Found OperatorRepeat\n";
                 ptr = std::make_shared<OperatorRepeat>(version, id);
             }
         }
         it = ptr->parse(it);
         packets.push_back(std::move(ptr));
-        std::cout << "parsed " << std::distance(bck, it) << " bits\n";
     }
 
     return it;
-}
-
-
-int OperatorRepeat::sum_versions() const
-{
-    int result = version;
-    for (auto const& ptr : packets) {
-        result += ptr->sum_versions();
-    }
-    return result;
 }
 
 int main()
@@ -273,10 +267,10 @@ int main()
         }
     }
 
-    for (auto const b : data) {
-        std::cout << (b?'1':'0');
-    }
-    std::cout << "\n";
+    // for (auto const b : data) {
+    //     std::cout << (b?'1':'0');
+    // }
+    // std::cout << "\n";
 
     std::vector<PacketPtr> packets;
 
@@ -288,17 +282,11 @@ int main()
 
         PacketPtr ptr;
         if (id == 4) {
-            std::cout << "Found LiteralValue\n";
             ptr = std::make_shared<LiteralValue>(version, id);
         } else {
-            // operators
             if (!*it++) {
-                // raw bits, length in next 15bits
-                std::cout << "Found OperatorRaw\n";
                 ptr = std::make_shared<OperatorRaw>(version, id);
             } else {
-                // next 11 bits are a number that represents the number of sub-packets immediately contained
-                std::cout << "Found OperatorRepeat\n";
                 ptr = std::make_shared<OperatorRepeat>(version, id);
             }
         }
@@ -306,14 +294,17 @@ int main()
         packets.push_back(std::move(ptr));
     }
 
-    std::cout << "Loaded " << packets.size() << " packets\n";
-
     int result1 = 0;
     for (auto const& ptr : packets) {
         result1 += ptr->sum_versions();
     }
-
     std::cout << "1: " << result1 << "\n";
+
+    int64_t result2 = 0;
+    for (auto const& ptr : packets) {
+        result2 = ptr->get_value();
+    }
+    std::cout << "2: " << result2 << "\n";
 
     return 0;
 }
