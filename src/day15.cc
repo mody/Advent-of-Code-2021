@@ -153,7 +153,7 @@ protected:
     std::pair<CoordType, CoordType> index_to_xy(CoordType index) const
     {
         CoordType x = index % max_x;
-        CoordType y = index / max_y;
+        CoordType y = index / max_x;
         return {x, y};
     }
 
