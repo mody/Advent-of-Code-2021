@@ -29,61 +29,65 @@ int main()
 
     long velocity = 1;
     for (; velocity_to_distance(velocity) < dst_x_from; ++velocity) {
-        // std::cout << "velocity: " << velocity << ", distance: " << velocity_to_distance(velocity) << "\n";
     }
     std::cout << "min velocity: " << velocity << ", distance: " << velocity_to_distance(velocity) << "\n";
 
-    auto shoot = [&](long v, long s) -> long {
+    auto shoot = [&](long v, long s) -> std::pair<long, bool> {
         long max_y = 0;
         long x = 0, y = 0;
         bool hit = false;
         for(;;) {
-            // std::cout << "shoot(" << v << ", " << s << ") (" << x << ", " << y << ")\n";
             if (x >= dst_x_from && x <= dst_x_to && y >= dst_y_from && y <= dst_y_to) {
-                // std::cout << "hit!\n";
                 hit = true;
                 break;
             }
             if (x > dst_x_to) {
-                // std::cout << "overshoot!\n";
                 break;
             }
-            if (y < dst_y_to) {
-                // std::cout << "too low!\n";
+            if (y < std::min(dst_y_from, dst_y_to)) {
                 break;
             }
-            max_y = std::max(y, max_y);
 
             x += v;
+            y += s;
+            max_y = std::max(y, max_y);
+
             if (v) {
                 --v;
             }
-            y += s;
             --s;
         }
-        if (!hit) {
-            max_y = 0;
-        }
-        return max_y;
+        return {max_y, hit};
     };
 
 
-    long speed = 1;
-    long max_y = 0, max_speed = 0;
-    for(; speed < 200; ++speed) {
-        long yy = shoot(velocity, speed);
-        if (yy == 0) {
+    long max_y = 0, speed = 0;
+    for(long s = 0; s < 200; ++s) {
+        auto const& [yy, hit] = shoot(velocity, s);
+        if (!hit) {
             // miss
             continue;
         }
         if (yy > max_y) {
             max_y = yy;
-            max_speed = speed;
+            speed = s;
         }
     }
-    std::cout << "Best speed: " << max_speed << ", with height: " << max_y << "\n";
+    // std::cout << "Best speed: " << speed << ", with height: " << max_y << "\n";
 
     std::cout << "1: " << max_y << "\n";
+
+    long count = 0;
+    for (long v = velocity; v <= dst_x_to; ++v) {
+        for (long s = -200; s < 200; ++s) {
+            auto const&[_, hit] = shoot(v, s);
+            if (hit) {
+                ++count;
+            }
+        }
+    }
+
+    std::cout << "2: " << count << "\n";
 
     return 0;
 }
