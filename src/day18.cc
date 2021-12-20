@@ -22,7 +22,6 @@ struct Tree {
     using NodeOp = std::function<bool(Node*, int)>;
 
     void add(std::string input) {
-        // std::cout << "Add: " << input << std::endl;
         if (root == nullptr) {
             root = parse(nullptr, input);
             return;
@@ -39,10 +38,8 @@ struct Tree {
 
     bool explode()
     {
-        // std::cout << "Explode..." << std::endl;
         Node* hit = nullptr;
         iterate(root, 1, [&](Node* n, int level) -> bool {
-            // std::cout << "OP: " << std::hex << n << ", level: " << level << std::endl;
             if (level > 4) {
                 hit = n;
                 return true;
@@ -51,48 +48,36 @@ struct Tree {
         });
 
         if (!hit) {
-            // std::cout << "nothing to explode" << std::endl;
             return false;
         }
         assert(hit->left == nullptr);
         assert(hit->right == nullptr);
-        // std::cout << std::dec << "hit [" << hit->lval << "," << hit->rval << "]" << std::endl;
 
         Node* l = hit;
         for(; l->parent && l == l->parent->left; l = l->parent) {}
         if (l->parent != nullptr) {
-            // handle left side
             l = l->parent;
             if (l->left) {
                 l = l->left;
                 for (; l->right; l = l->right) {
                 }
-                // std::cout << "left target value in " << std::hex << l << ": " << std::dec << l->rval << std::endl;
                 l->rval += hit->lval;
             } else {
-                // std::cout << "left target value in " << std::hex << l << ": " << std::dec << l->lval << std::endl;
                 l->lval += hit->lval;
             }
-        } else {
-            // std::cout << "NO left target value found" << std::endl;
         }
 
         Node* r = hit;
         for(; r->parent && r == r->parent->right; r = r->parent) {}
         if (r->parent != nullptr) {
-            // handle left side
             r = r->parent;
             if (r->right) {
                 r = r->right;
                 for(; r->left; r = r->left) {}
-                // std::cout << "right target value in " << std::hex << r << ": " << std::dec << r->lval << std::endl;
                 r->lval += hit->rval;
             } else {
-                // std::cout << "right target value in " << std::hex << r << ": " << std::dec << r->rval << std::endl;
                 r->rval += hit->rval;
             }
-        } else {
-            // std::cout << "NO right target value found" << std::endl;
         }
 
         if (hit == hit->parent->left) {
@@ -109,15 +94,8 @@ struct Tree {
 
     bool split()
     {
-        // std::cout << "Split..." << std::endl;
-        std::stringstream ss;
-        dumper(ss, root);
-        const std::string dump_str = ss.str();
-        // std::cout << "dump_str: " << dump_str << std::endl;
-
         Node* hit = nullptr;
         iterate_for_split(root, [&](Node* n, int val) -> bool {
-            // std::cout << "for split - see: " << val << std::endl;
             if (val >= 10) {
                 hit = n;
                 return true;
@@ -126,23 +104,7 @@ struct Tree {
         });
 
         if (!hit) {
-            // std::cout << "nothing to split" << std::endl;
             return false;
-        }
-        // std::cout << std::dec << "hit [" << hit->lval << "," << hit->rval << "]" << std::endl;
-
-        {
-            std::smatch m;
-            bool found = std::regex_search(dump_str, m, NUMBER);
-            assert(found);
-            auto num = std::stoi(m.str(1));
-            if (hit->lval > 9) {
-                // std::cout << "num: " << num << " != " << hit->lval << std::endl;
-                assert(num == hit->lval);
-            } else {
-                // std::cout << "num: " << num << " != " << hit->rval << std::endl;
-                assert(num == hit->rval);
-            }
         }
 
         nodes.push_back(std::make_shared<Node>());
@@ -249,7 +211,6 @@ protected:
         nodes.push_back(std::make_shared<Node>());
         auto p = nodes.back();
         p->parent = parent;
-        // std::cout << std::hex << p << " - input: " << input << std::endl;
 
         std::smatch m;
         if (std::regex_search(input, m, ONE)) {
@@ -257,7 +218,6 @@ protected:
             p->rval = std::stoi(m.str(2));
             input = input.substr(m.str(0).size());
         } else {
-            // std::cout << std::hex << p << " - l-input: " << input << std::endl;
             if (std::regex_search(input, m, L_SIDE)) {
                 p->lval = std::stoi(m.str(1));
                 input = input.substr(m.str(0).size());
@@ -266,7 +226,6 @@ protected:
                 p->left = parse(p.get(), input);
             }
 
-            // std::cout << std::hex << p << " - r-input: " << input << std::endl;
             if (input.front() == '[') {
                 p->right = parse(p.get(), input);
                 input = input.substr(1);  // skip ']'
@@ -279,7 +238,6 @@ protected:
                 input = input.substr(1);  // skip ']'
             }
         }
-        // std::cout << std::hex << p << " - output: " << input << std::endl;
 
         return p.get();
     }
@@ -288,49 +246,56 @@ protected:
     std::vector<NodePtr> nodes;
 };
 
-/*
-[[[[4,3],4],4],[7,[[8,4],9]]] + [1,1]:
-
-after addition: [[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]
-after explode:  [[[[0,7],4],[7,[[8,4],9]]],[1,1]]
-after explode:  [[[[0,7],4],[15,[0,13]]],[1,1]]
-after split:    [[[[0,7],4],[[7,8],[0,13]]],[1,1]]
-after split:    [[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]
-after explode:  [[[[0,7],4],[[7,8],[6,0]]],[8,1]]
-*/
+void process_tree(Tree& tree) {
+    for (;;) {
+        if (tree.explode()) {
+            continue;
+        }
+        if (tree.split()) {
+            continue;
+        }
+        break;
+    }
+}
 
 int main()
 {
     Tree tree;
 
-    std::string line;
-    std::getline(std::cin, line);
-    assert(!line.empty());
-    tree.add(line);
+    std::vector<std::string> lines;
 
-    while(std::getline(std::cin, line)) {
-        if (line.empty()) {
-            break;
-        }
-
-        tree.add(line);
-        // tree.dump();
-
-        for (;;) {
-            if (tree.explode()) {
-                // tree.dump();
-                continue;
+    {
+        std::string line;
+        while (std::getline(std::cin, line)) {
+            if (line.empty()) {
+                break;
             }
-            if (tree.split()) {
-                continue;
-            }
-            break;
+            lines.push_back(std::move(line));
         }
-        // tree.dump();
     }
-    tree.dump();
+
+    for (auto const& l : lines) {
+        tree.add(l);
+        process_tree(tree);
+    }
     std::cout << "1: " << tree.magnitude() << "\n";
 
+    uint64_t result2 = 0;
+    for (auto i1 = lines.begin(); i1 != lines.end(); ++i1) {
+        for (auto i2 = lines.begin(); i2 != lines.end(); ++i2) {
+            if (i1 == i2) {
+                continue;
+            }
+            Tree t2;
+            t2.add(*i1);
+            process_tree(t2);
+            t2.add(*i2);
+            process_tree(t2);
+            result2 = std::max(result2, t2.magnitude());
+        }
+    }
+
+    std::cout << "2: " << result2 << "\n";
 
     return 0;
 }
