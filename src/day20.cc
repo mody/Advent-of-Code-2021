@@ -94,13 +94,11 @@ void dump(Mapa const& mapa)
 }
 
 
-void part1(Mapa mapa, Mask const& mask)
+unsigned process(unsigned iterations, Mapa mapa, Mask const& mask)
 {
-    // dump(mapa);
-
     unsigned void_value = mask.at(0) ? 1 : 0;
 
-    for (int i = 0 ; i < 2; ++i) {
+    for (int i = 0 ; i < iterations; ++i) {
         auto const& ms = measure(mapa);
         Mapa m2;
 
@@ -141,8 +139,6 @@ void part1(Mapa mapa, Mask const& mask)
             }
         }
         std::swap(mapa, m2);
-        // std::cout << "\nIteration: " << i << "\n";
-        // dump(mapa);
 
         if (void_value) {
             void_value = mask.at(mask.size() - 1) ? 1 : 0;
@@ -157,13 +153,8 @@ void part1(Mapa mapa, Mask const& mask)
             ++count;
         }
     }
-    std::cout << "1: " << count << "\n";
+    return count;
 }
-
-/*
-Answer (part 1): 5786
-Answer (part 2): 16757
- */
 
 int main()
 {
@@ -193,7 +184,11 @@ int main()
         x = 0;
     }
 
-    part1(mapa, mask);
+    auto result1 = process(2, mapa, mask);
+    std::cout << "1: " << result1 << "\n";
+
+    auto result2 = process(50, mapa, mask);
+    std::cout << "2: " << result2 << "\n";
 
     return 0;
 }
