@@ -72,3 +72,6 @@ target_compile_features(day20 PRIVATE cxx_std_17)
 
 add_executable(day21 src/day21.cc)
 target_compile_features(day21 PRIVATE cxx_std_17)
+
+add_executable(day22 src/day22.cc)
+target_compile_features(day22 PRIVATE cxx_std_17)
