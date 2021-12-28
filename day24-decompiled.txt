@@ -1,0 +1,14 @@
+push A + 5
+push B + 14
+push C + 15
+push D + 16
+pop() if E == (D - 16)
+pop() if F == (C - 11)
+pop() if G == (B - 6)
+push H + 13
+push I + 16
+pop() if J == (I - 10)
+pop() if K == (H - 8)
+pop() if L == (A - 11)
+push M + 11
+pop() if N == (M - 15)
