@@ -7,7 +7,7 @@
 
 int64_t process_complet(std::string num)
 {
-    // assert(num.size() == 14);
+    assert(num.size() == 14);
 
     if (num.find('0') != std::string::npos) {
         return -1;
@@ -36,11 +36,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -61,12 +57,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -87,12 +78,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -113,12 +99,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -139,12 +120,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -165,12 +141,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -191,12 +162,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -217,12 +183,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -243,11 +204,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -268,11 +225,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -293,11 +246,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -318,11 +267,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -343,11 +288,7 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
-    if (it == num.end()) {
-        std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
-        return z;
-    }
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
     w = *it++ - '0';
     x *= 0;
@@ -368,9 +309,9 @@ int64_t process_complet(std::string num)
     y *= x;
     z += y;
 
-    std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
+    // std::cout << "w: " << w << ", x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
-    std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
+    // std::cout << "num: " << num << ", x: " << x << ", y: " << y << ", z: " << z << "\n" << std::endl;
 
     assert(it == num.cend());
 
@@ -413,6 +354,25 @@ int main()
     std::string r1{"91599994399395"};
     if (process_complet(r1) == 0) {
         std::cout << "1: " << r1 << std::endl;
+    }
+    // A=7
+    // B=1
+    // C=1
+    // D=1
+    // E=1
+    // F=5
+    // G=9
+    // H=1
+    // I=1
+    // J=7
+    // K=6
+    // L=1
+    // M=5
+    // N=1
+
+    std::string r2{"71111591176151"};
+    if (process_complet(r2) == 0) {
+        std::cout << "2: " << r2 << std::endl;
     }
 
     return 0;
